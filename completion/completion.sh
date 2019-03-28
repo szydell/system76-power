@@ -25,7 +25,7 @@ _system76-power ()
             return 0
             ;;
 
-        battery|balanced|daemon|intel|nvidia|performance|switchable|on|off|auto)
+        battery|balanced|intel|nvidia|performance|switchable|on|off|auto)
             local _opts="--help"
             COMPREPLY=( $(compgen -W "${_opts}" -- ${cur}) )
             return 0
@@ -33,6 +33,12 @@ _system76-power ()
 
         ?(--)help|-[hv]|--version)
             # Do not reply more
+            return 0
+            ;;
+
+	daemon)
+	    local _opts="--experimental --quiet --verbose --help"
+            COMPREPLY=( $(compgen -W "${_opts}" -- ${cur}) )
             return 0
             ;;
 
