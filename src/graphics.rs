@@ -255,21 +255,6 @@ impl Graphics {
             .status()
             .map_err(|why| GraphicsDeviceError::Command { cmd: UPDATE_INITRAMFS_CMD, why })?;
 
-                status = Command::new("dracut").arg("--force").status()?;
-
-            } else if Command::new("command").arg("-v").arg("update-initramfs").stdout(Stdio::null()).status()?.success() {
-
-                status = Command::new("update-initramfs").arg("-u").status()?;
-
-            } else {
-                // Tools not found. Raise an error.
-                return Err(io::Error::new(
-                    io::ErrorKind::Other,
-                    format!("update-initramfs: failed. No Dracut nor update-initfamfs found.")
-                ));
-            }
-
-
         if !status.success() {
             return Err(GraphicsDeviceError::UpdateInitramfs(status));
         }
