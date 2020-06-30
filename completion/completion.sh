@@ -4,9 +4,9 @@
 # -----
 #
 # Changelog:
-# 2019.01.14 - version 1.0, Marcin Szydelski <github.com/szydell/system76-power>
-# 2018.10.30 - version 1.1, Marcin Szydelski
-#            - add hybrid mode
+# 2020.06.30 - rename intel to integrated mode
+# 2019.01.14 - add hybrid mode
+# 2018.10.30 - initial version <github.com/szydell/system76-power>
 #
 
 _system76-power ()
@@ -22,12 +22,12 @@ _system76-power ()
     # 2nd/3rd level options
     case "${prev}" in
         graphics)
-            local _opts="intel hybrid nvidia power switchable --help"
+            local _opts="integrated hybrid nvidia power switchable --help"
             COMPREPLY=( $(compgen -W "${_opts}" -- ${cur}) )
             return 0
             ;;
 
-        battery|balanced|intel|hybrid|nvidia|performance|switchable|on|off|auto)
+        battery|balanced|integrated|hybrid|nvidia|performance|switchable|on|off|auto)
             local _opts="--help"
             COMPREPLY=( $(compgen -W "${_opts}" -- ${cur}) )
             return 0
