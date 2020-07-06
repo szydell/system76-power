@@ -27,7 +27,7 @@ _system76-power ()
             return 0
             ;;
 
-        battery|balanced|integrated|hybrid|nvidia|performance|switchable|on|off|auto)
+        battery|balanced|compute|integrated|hybrid|nvidia|performance|switchable|on|off|auto)
             local _opts="--help"
             COMPREPLY=( $(compgen -W "${_opts}" -- ${cur}) )
             return 0
