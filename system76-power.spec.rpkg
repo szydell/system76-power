@@ -46,9 +46,9 @@ make DEBUG=1 all
 %install
 
 make install DESTDIR=%{buildroot}
-install -D -m 0644 "debian/{{{ git_dir_name }}}.service" "%{buildroot}/usr/lib/systemd/system/{{{ git_dir_name }}}.service"
-install -D -m 0644 "debian/{{{ git_dir_name }}}-wake.service" "%{buildroot}/usr/lib/systemd/system/{{{ git_dir_name }}}-wake.service"
-install -D -m 0644 "completion/completion.sh" "%{buildroot}/etc/bash_completion.d/system76-power"
+install -D -m 0644 "debian/{{{ git_dir_name }}}.service" "%{buildroot}/%{_sysconfdir}/systemd/system/{{{ git_dir_name }}}.service"
+install -D -m 0644 "debian/{{{ git_dir_name }}}-wake.service" "%{buildroot}/%{_sysconfdir}/systemd/system/{{{ git_dir_name }}}-wake.service"
+install -D -m 0644 "completion/completion.sh" "%{buildroot}/%{_sysconfdir}/bash_completion.d/system76-power"
 
 # do after installation
 %post
@@ -68,10 +68,10 @@ rm -f /etc/modules-load.d/system76-power.conf
 # Those files will be in the rpm
 %files
 /usr/bin/system76-power
-/etc/dbus-1/system.d/system76-power.conf
-/etc/bash_completion.d/system76-power
-/usr/lib/systemd/system/{{{ git_dir_name }}}.service
-/usr/lib/systemd/system/{{{ git_dir_name }}}-wake.service
+%{_sysconfdir}/dbus-1/system.d/system76-power.conf
+%{_sysconfdir}/bash_completion.d/system76-power
+%{_sysconfdir}/systemd/system/{{{ git_dir_name }}}.service
+%{_sysconfdir}/systemd/system/{{{ git_dir_name }}}-wake.service
 
 # Changelog
 %changelog
