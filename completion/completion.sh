@@ -22,7 +22,7 @@ _system76-power ()
     # 2nd/3rd level options
     case "${prev}" in
         graphics)
-            local _opts="integrated hybrid nvidia power switchable --help"
+            local _opts="compute integrated hybrid nvidia power switchable --help"
             COMPREPLY=( $(compgen -W "${_opts}" -- ${cur}) )
             return 0
             ;;
