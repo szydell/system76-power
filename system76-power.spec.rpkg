@@ -21,10 +21,11 @@ BuildRequires: cargo
 %{?systemd_requires}
 BuildRequires: systemd
 BuildRequires: dbus-devel
-
+BuildRequires: libusb-devel
 #Packages required to work
 Requires: dbus-common 
 Requires: systemd
+Requires: libusb
 
 
 # More detailed description of the package
