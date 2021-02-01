@@ -68,11 +68,12 @@ rm -f /etc/modules-load.d/system76-power.conf
 
 # Those files will be in the rpm
 %files
-/usr/bin/system76-power
+%{_bindir}/system76-power
 %{_sysconfdir}/dbus-1/system.d/system76-power.conf
 %{_sysconfdir}/bash_completion.d/system76-power
 %{_sysconfdir}/systemd/system/{{{ git_dir_name }}}.service
 %{_sysconfdir}/systemd/system/{{{ git_dir_name }}}-wake.service
+%{_datadir}/polkit-1/actions/com.system76.powerdaemon.policy
 
 # Changelog
 %changelog
