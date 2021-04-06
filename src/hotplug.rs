@@ -21,17 +21,8 @@ pub struct HotPlugDetect {
     pins:     [u8; 4],
 }
 
-pub const REQUIRES_NVIDIA: &[&str] = &[
-    "addw1",
-    "addw2",
-    "gaze14",
-    "gaze15",
-    "oryp4",
-    "oryp4-b",
-    "oryp5",
-    "oryp6",
-    "oryp7",
-];
+pub const REQUIRES_NVIDIA: &[&str] =
+    &["addw1", "addw2", "gaze14", "gaze15", "oryp4", "oryp4-b", "oryp5", "oryp6", "oryp7"];
 
 impl HotPlugDetect {
     pub unsafe fn new(nvidia_device: Option<String>) -> Result<HotPlugDetect, HotPlugDetectError> {
@@ -39,17 +30,7 @@ impl HotPlugDetect {
             .map_err(HotPlugDetectError::ProductVersion)?;
 
         match model.trim() {
-            "addw1" => Ok(HotPlugDetect {
-                sideband: Sideband::new(0xFD00_0000).map_err(HotPlugDetectError::Sideband)?,
-                port:     0x6A,
-                pins:     [
-                    0x28, // USB-C on rear
-                    0x2a, // HDMI
-                    0x2c, // Mini DisplayPort
-                    0x2e, // USB-C on right
-                ],
-            }),
-            "addw2" => Ok(HotPlugDetect {
+            "addw1" | "addw2" => Ok(HotPlugDetect {
                 sideband: Sideband::new(0xFD00_0000).map_err(HotPlugDetectError::Sideband)?,
                 port:     0x6A,
                 pins:     [
@@ -93,9 +74,9 @@ impl HotPlugDetect {
                         variant: other.into(),
                     }),
                 }
-            },
+            }
             "gaze15" => {
-                let variant = nvidia_device.unwrap_or("unknown".to_string());
+                let variant = nvidia_device.unwrap_or_else(|| "unknown".to_string());
 
                 match variant.trim() {
                     // NVIDIA GTX 1660 Ti
@@ -111,7 +92,7 @@ impl HotPlugDetect {
                         ],
                     }),
                     // NVIDIA GTX 1650, 1650 Ti
-                     "0x1f99" | "0x1f95" => Ok(HotPlugDetect {
+                    "0x1f99" | "0x1f95" => Ok(HotPlugDetect {
                         sideband: Sideband::new(0xFD00_0000)
                             .map_err(HotPlugDetectError::Sideband)?,
                         port:     0x6A,
@@ -127,7 +108,7 @@ impl HotPlugDetect {
                         variant: other.into(),
                     }),
                 }
-            },
+            }
             "oryp4" | "oryp4-b" | "oryp5" => Ok(HotPlugDetect {
                 sideband: Sideband::new(0xFD00_0000).map_err(HotPlugDetectError::Sideband)?,
                 port:     0x6A,
@@ -154,8 +135,7 @@ impl HotPlugDetect {
 
     pub unsafe fn detect(&self) -> [bool; 4] {
         let mut hpd = [false; 4];
-        for i in 0..self.pins.len() {
-            let pin = self.pins[i];
+        for (i, &pin) in self.pins.iter().enumerate() {
             if pin > 0 {
                 let data = self.sideband.gpio(self.port, pin);
                 hpd[i] = data & 2 == 2;
