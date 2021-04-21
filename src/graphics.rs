@@ -46,7 +46,7 @@ alias nvidia-modeset off
 
 const PRIME_DISCRETE_PATH: &str = "/etc/prime-discrete";
 
-#[derive(Debug, Error)]
+#[derive(Debug, err_derive::Error)]
 pub enum GraphicsDeviceError {
     #[error(display = "failed to execute {} command: {}", cmd, why)]
     Command { cmd: &'static str, why: io::Error },
@@ -99,7 +99,7 @@ impl GraphicsDevice {
             if func.path().exists() {
                 match func.driver() {
                     Ok(driver) => {
-                        info!("{}: Unbinding {}", driver.id(), func.id());
+                        log::info!("{}: Unbinding {}", driver.id(), func.id());
                         driver.unbind(&func).map_err(|why| GraphicsDeviceError::Unbind {
                             driver: driver.id().to_owned(),
                             func: func.id().to_owned(),
@@ -127,7 +127,7 @@ impl GraphicsDevice {
             if func.path().exists() {
                 match func.driver() {
                     Ok(driver) => {
-                        error!("{}: in use by {}", func.id(), driver.id());
+                        log::error!("{}: in use by {}", func.id(), driver.id());
                         return Err(GraphicsDeviceError::DeviceInUse {
                             func:   func.id().to_owned(),
                             driver: driver.id().to_owned(),
@@ -135,7 +135,7 @@ impl GraphicsDevice {
                     }
                     Err(why) => match why.kind() {
                         io::ErrorKind::NotFound => {
-                            info!("{}: Removing", func.id());
+                            log::info!("{}: Removing", func.id());
                             func.remove().map_err(|why| GraphicsDeviceError::Remove {
                                 device: self.id.clone(),
                                 why,
@@ -150,7 +150,7 @@ impl GraphicsDevice {
                     },
                 }
             } else {
-                warn!("{}: Already removed", func.id());
+                log::warn!("{}: Already removed", func.id());
             }
         }
 
@@ -186,7 +186,7 @@ impl Graphics {
     pub fn new() -> io::Result<Graphics> {
         let bus = PciBus::new()?;
 
-        info!("Rescanning PCI bus");
+        log::info!("Rescanning PCI bus");
         bus.rescan()?;
 
         let devs = PciDevice::all()?;
@@ -197,7 +197,7 @@ impl Graphics {
                 for func in &devs {
                     if let Some(func_slot) = func.id().split('.').next() {
                         if func_slot == parent_slot {
-                            info!("{}: Function for {}", func.id(), parent.id());
+                            log::info!("{}: Function for {}", func.id(), parent.id());
                             functions.push(func.clone());
                         }
                     }
@@ -215,19 +215,19 @@ impl Graphics {
             if let 0x03 = (c >> 16) & 0xFF {
                 match dev.vendor()? {
                     0x1002 => {
-                        info!("{}: AMD graphics", dev.id());
+                        log::info!("{}: AMD graphics", dev.id());
                         amd.push(GraphicsDevice::new(dev.id().to_owned(), functions(&dev)));
                     }
                     0x10DE => {
-                        info!("{}: NVIDIA graphics", dev.id());
+                        log::info!("{}: NVIDIA graphics", dev.id());
                         nvidia.push(GraphicsDevice::new(dev.id().to_owned(), functions(&dev)));
                     }
                     0x8086 => {
-                        info!("{}: Intel graphics", dev.id());
+                        log::info!("{}: Intel graphics", dev.id());
                         intel.push(GraphicsDevice::new(dev.id().to_owned(), functions(&dev)));
                     }
                     vendor => {
-                        info!("{}: Other({:X}) graphics", dev.id(), vendor);
+                        log::info!("{}: Other({:X}) graphics", dev.id(), vendor);
                         other.push(GraphicsDevice::new(dev.id().to_owned(), functions(&dev)));
                     }
                 }
@@ -294,7 +294,7 @@ impl Graphics {
     fn gpu_supports_runtimepm(&self) -> Result<bool, GraphicsDeviceError> {
         let id = self.get_nvidia_device_id()?;
         let dev = self.get_nvidia_device(id)?;
-        info!("Device 0x{:04} features: {:?}", id, dev.features);
+        log::info!("Device 0x{:04} features: {:?}", id, dev.features);
         Ok(dev.features.contains(&"runtimepm".to_string()))
     }
 
@@ -372,11 +372,11 @@ impl Graphics {
             "off\n"
         };
 
-        info!("Setting {} to {}", PRIME_DISCRETE_PATH, mode);
+        log::info!("Setting {} to {}", PRIME_DISCRETE_PATH, mode);
         Self::set_prime_discrete(mode)?;
 
         {
-            info!("Creating {}", MODPROBE_PATH);
+            log::info!("Creating {}", MODPROBE_PATH);
 
             let mut file = fs::OpenOptions::new()
                 .create(true)
@@ -403,10 +403,10 @@ impl Graphics {
         const SYSTEMCTL_CMD: &str = "systemctl";
 
         let action = if vendor == "nvidia" {
-            info!("Enabling nvidia-fallback.service");
+            log::info!("Enabling nvidia-fallback.service");
             "enable"
         } else {
-            info!("Disabling nvidia-fallback.service");
+            log::info!("Disabling nvidia-fallback.service");
             "disable"
         };
 
@@ -418,10 +418,13 @@ impl Graphics {
 
         if !status.success() {
             // Error is ignored in case this service is removed
-            warn!("systemctl: failed with {} (not an error if service does not exist!)", status);
+            log::warn!(
+                "systemctl: failed with {} (not an error if service does not exist!)",
+                status
+            );
         }
 
-        info!("Updating initramfs");
+        log::info!("Updating initramfs");
         
 
         const COMMAND_CMD: &str = "command";
@@ -464,10 +467,10 @@ impl Graphics {
         self.switchable_or_fail()?;
 
         if power {
-            info!("Enabling graphics power");
+            log::info!("Enabling graphics power");
             self.bus.rescan().map_err(GraphicsDeviceError::Rescan)?;
         } else {
-            info!("Disabling graphics power");
+            log::info!("Disabling graphics power");
 
             // TODO: Don't allow turning off power if nvidia_drm modeset is enabled
 
