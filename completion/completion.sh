@@ -17,7 +17,7 @@ _system76-power ()
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     # 1st level options
-    opts="daemon graphics help profile --version --help"
+    opts="charge-threshold daemon graphics help profile --version --help"
 
     # 2nd/3rd level options
     case "${prev}" in
@@ -38,8 +38,8 @@ _system76-power ()
             return 0
             ;;
 
-	daemon)
-	    local _opts="--experimental --quiet --verbose --help"
+	     daemon)
+	          local _opts="--quiet --verbose --help"
             COMPREPLY=( $(compgen -W "${_opts}" -- ${cur}) )
             return 0
             ;;
@@ -50,15 +50,24 @@ _system76-power ()
             return 0
             ;;
 
-	power)
-	    local _opts="auto on off --help"
+	      power)
+	          local _opts="auto on off --help"
             COMPREPLY=( $(compgen -W "${_opts}" -- ${cur}) )
             return 0
             ;;
-
+        charge-threshold)
+            local _opts="--profile --list-profiles --help"
+            COMPREPLY=( $(compgen -W "${_opts}" -- ${cur}) )
+            return 0
+            ;;
+        --profile)
+            local _opts="full_charge balanced max_lifespan --help"
+            COMPREPLY=( $(compgen -W "${_opts}" -- ${cur}) )
+            return 0
+            ;;
         *)
-        ;;
-    esac
+            ;;
+  esac
 
    COMPREPLY=($(compgen -W "${opts}" -- ${cur}))  
    return 0
