@@ -55,7 +55,7 @@ _system76-power ()
             COMPREPLY=( $(compgen -W "${_opts}" -- ${cur}) )
             return 0
             ;;
-        charge-threshold)
+        charge-thresholds)
             local _opts="--profile --list-profiles --help"
             COMPREPLY=( $(compgen -W "${_opts}" -- ${cur}) )
             return 0
