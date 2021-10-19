@@ -1,3 +1,7 @@
+// Copyright 2018-2021 System76 <info@system76.com>
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 use crate::errors::DiskPowerError;
 use std::{
     fs::{read_to_string, write},
@@ -52,15 +56,14 @@ impl Default for Disks {
 
 impl DiskPower for Disks {
     fn set_apm_level(&self, level: u8) -> Result<(), DiskPowerError> {
-        self.0.iter().filter(|dev| dev.is_rotational).map(|dev| dev.set_apm_level(level)).collect()
+        self.0.iter().filter(|dev| dev.is_rotational).try_for_each(|dev| dev.set_apm_level(level))
     }
 
     fn set_autosuspend_delay(&self, ms: i32) -> Result<(), DiskPowerError> {
         self.0
             .iter()
             .filter(|dev| dev.is_rotational)
-            .map(|dev| dev.set_autosuspend_delay(ms))
-            .collect()
+            .try_for_each(|dev| dev.set_autosuspend_delay(ms))
     }
 }
 

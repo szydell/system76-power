@@ -1,3 +1,7 @@
+// Copyright 2018-2021 System76 <info@system76.com>
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 #![allow(unused)]
 pub use sysfs_class::RuntimePowerManagement;
 
@@ -36,10 +40,7 @@ pub trait KernelParameter {
             log::debug!(
                 "Modifying kernel parameter at {:?} to {}",
                 path,
-                match str::from_utf8(value) {
-                    Ok(string) => string,
-                    Err(_) => "[INVALID UTF8]",
-                }
+                str::from_utf8(value).unwrap_or("[INVALID UTF8]")
             );
 
             if let Err(why) = write(path, value) {

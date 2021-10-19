@@ -1,6 +1,11 @@
+// Copyright 2018-2021 System76 <info@system76.com>
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 #![deny(clippy::all)]
 #![allow(clippy::missing_safety_doc)]
 
+pub mod acpi_platform;
 pub mod charge_thresholds;
 pub mod client;
 pub mod daemon;

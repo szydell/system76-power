@@ -1,3 +1,7 @@
+// Copyright 2018-2021 System76 <info@system76.com>
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 use crate::{charge_thresholds::ChargeProfile, err_str, Power, DBUS_IFACE, DBUS_NAME, DBUS_PATH};
 use clap::ArgMatches;
 use dbus::{
@@ -210,8 +214,8 @@ pub fn client(subcommand: &str, matches: &ArgMatches) -> Result<(), String> {
                 assert_eq!(thresholds.len(), 2);
                 let start = thresholds.next().unwrap();
                 let end = thresholds.next().unwrap();
-                let start = u8::from_str_radix(start, 10).map_err(err_str)?;
-                let end = u8::from_str_radix(end, 10).map_err(err_str)?;
+                let start = start.parse::<u8>().map_err(err_str)?;
+                let end = end.parse::<u8>().map_err(err_str)?;
                 client.set_charge_thresholds((start, end))?;
             } else if let Some(name) = matches.value_of("profile") {
                 if let Some(profile) = profiles.iter().find(|p| p.id == name) {

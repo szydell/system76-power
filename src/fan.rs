@@ -1,3 +1,7 @@
+// Copyright 2018-2021 System76 <info@system76.com>
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 #![allow(clippy::inconsistent_digit_grouping)]
 
 use std::{
@@ -7,13 +11,13 @@ use std::{
 };
 use sysfs_class::{HwMon, SysClass};
 
-#[derive(Debug, err_derive::Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum FanDaemonError {
-    #[error(display = "failed to collect hwmon devices: {}", _0)]
+    #[error("failed to collect hwmon devices: {}", _0)]
     HwmonDevices(io::Error),
-    #[error(display = "platform hwmon not found")]
+    #[error("platform hwmon not found")]
     PlatformHwmonNotFound,
-    #[error(display = "cpu hwmon not found")]
+    #[error("cpu hwmon not found")]
     CpuHwmonNotFound,
 }
 

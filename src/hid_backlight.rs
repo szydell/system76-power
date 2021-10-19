@@ -1,3 +1,7 @@
+// Copyright 2018-2021 System76 <info@system76.com>
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 use hidapi::{HidApi, HidDevice, HidResult};
 use inotify::{Inotify, WatchMask};
 use std::{fs, path::Path};
@@ -79,7 +83,7 @@ pub fn daemon() {
     let mut buffer = [0; 1024];
     loop {
         let brightness_string = fs::read_to_string(&brightness_file).unwrap();
-        let brightness = u8::from_str_radix(brightness_string.trim(), 10).unwrap();
+        let brightness = brightness_string.trim().parse::<u8>().unwrap();
 
         let color_string = fs::read_to_string(&color_file).unwrap();
         let color = u32::from_str_radix(color_string.trim(), 16).unwrap();

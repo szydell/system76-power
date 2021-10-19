@@ -1,3 +1,7 @@
+// Copyright 2018-2021 System76 <info@system76.com>
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 use super::pci_runtime_pm_support;
 use crate::{
     errors::{BacklightError, ModelError, PciDeviceError, ProfileError, ScsiHostError},
@@ -29,6 +33,12 @@ macro_rules! catch {
 
 /// Sets parameters for the balanced profile.
 pub fn balanced(errors: &mut Vec<ProfileError>, set_brightness: bool) {
+    // Use the ACPI Platform Profile if the hardware is supported by the kernel.
+    if crate::acpi_platform::supported() {
+        crate::acpi_platform::balanced();
+        return;
+    }
+
     // The dirty kernel parameter controls how often the OS will sync data to disks. The less
     // frequently this occurs, the more power can be saved, yet the higher the risk of sudden
     // power loss causing loss of data. 15s is a resonable number.
@@ -71,6 +81,12 @@ pub fn balanced(errors: &mut Vec<ProfileError>, set_brightness: bool) {
 
 /// Sets parameters for the performance profile
 pub fn performance(errors: &mut Vec<ProfileError>, _set_brightness: bool) {
+    // Use the ACPI Platform Profile if the hardware is supported by the kernel.
+    if crate::acpi_platform::supported() {
+        crate::acpi_platform::performance();
+        return;
+    }
+
     Dirty::default().set_max_lost_work(15);
     LaptopMode::default().set(b"0");
     RadeonDevice::get_devices().for_each(|dev| dev.set_profiles("high", "performance", "auto"));
@@ -88,6 +104,12 @@ pub fn performance(errors: &mut Vec<ProfileError>, _set_brightness: bool) {
 
 /// Sets parameters for the battery profile
 pub fn battery(errors: &mut Vec<ProfileError>, set_brightness: bool) {
+    // Use the ACPI Platform Profile if the hardware is supported by the kernel.
+    if crate::acpi_platform::supported() {
+        crate::acpi_platform::battery();
+        return;
+    }
+
     Dirty::default().set_max_lost_work(15);
     LaptopMode::default().set(b"2");
     RadeonDevice::get_devices().for_each(|dev| dev.set_profiles("low", "battery", "low"));
@@ -144,7 +166,7 @@ fn pci_device_runtime_pm(pm: RuntimePowerManagement) -> Result<(), PciDeviceErro
         match device {
             Ok(device) => device
                 .set_runtime_pm(pm)
-                .map_err(|why| PciDeviceError::SetRuntimePM(device.id().to_owned(), why))?,
+                .map_err(|why| PciDeviceError::SetRuntimePm(device.id().to_owned(), why))?,
             Err(why) => {
                 log::warn!("failed to iterate PCI device: {}", why);
             }

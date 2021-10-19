@@ -1,3 +1,7 @@
+// Copyright 2018-2021 System76 <info@system76.com>
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 use dbus::{
     arg,
     channel::{MatchingReceiver, Sender},
@@ -18,9 +22,10 @@ use std::{
 };
 use tokio::{
     signal::unix::{signal, SignalKind},
-    stream::StreamExt,
-    time::delay_for,
+    time::sleep,
 };
+
+use futures::future::FutureExt;
 
 use crate::{
     charge_thresholds::{
@@ -46,16 +51,19 @@ const THRESHOLD_POLICY: &str = "com.system76.powerdaemon.set-charge-thresholds";
 static CONTINUE: AtomicBool = AtomicBool::new(true);
 
 fn signal_handling() {
-    let int = signal(SignalKind::interrupt()).unwrap().map(|_| "SIGINT");
-    let hup = signal(SignalKind::hangup()).unwrap().map(|_| "SIGHUP");
-    let term = signal(SignalKind::terminate()).unwrap().map(|_| "SIGTERM");
-    let mut signals = int.merge(hup).merge(term);
+    let mut int = signal(SignalKind::interrupt()).unwrap();
+    let mut hup = signal(SignalKind::hangup()).unwrap();
+    let mut term = signal(SignalKind::terminate()).unwrap();
 
     tokio::spawn(async move {
-        while let Some(sig) = signals.next().await {
-            log::info!("caught signal: {}", sig);
-            CONTINUE.store(false, Ordering::SeqCst);
-        }
+        let sig = futures::select! {
+            _ = int.recv().fuse() => "SIGINT",
+            _ = hup.recv().fuse() => "SIGHUP",
+            _ = term.recv().fuse() => "SIGTERM"
+        };
+
+        log::info!("caught signal: {}", sig);
+        CONTINUE.store(false, Ordering::SeqCst);
     });
 }
 
@@ -64,7 +72,7 @@ fn signal_handling() {
 static PCI_RUNTIME_PM: AtomicBool = AtomicBool::new(false);
 
 // TODO: Whitelist system76 hardware that's known to work with this setting.
-fn pci_runtime_pm_support() -> bool { PCI_RUNTIME_PM.load(Ordering::SeqCst) }
+pub(crate) fn pci_runtime_pm_support() -> bool { PCI_RUNTIME_PM.load(Ordering::SeqCst) }
 
 struct PowerDaemon {
     initial_set:     bool,
@@ -177,7 +185,7 @@ impl Power for PowerDaemon {
     }
 }
 
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 pub async fn daemon() -> Result<(), String> {
     signal_handling();
     let pci_runtime_pm = std::env::var("S76_POWER_PCI_RUNTIME_PM").ok().map_or(false, |v| v == "1");
@@ -317,7 +325,7 @@ pub async fn daemon() -> Result<(), String> {
 
     log::info!("Handling dbus requests");
     while CONTINUE.load(Ordering::SeqCst) {
-        delay_for(Duration::from_millis(1000)).await;
+        sleep(Duration::from_millis(1000)).await;
 
         fan_daemon.step();
 

@@ -1,3 +1,7 @@
+// Copyright 2018-2021 System76 <info@system76.com>
+//
+// SPDX-License-Identifier: GPL-3.0-only
+
 use crate::{hotplug, module::Module, pci::PciBus};
 use serde::{Deserialize, Serialize};
 use std::{
@@ -46,37 +50,37 @@ alias nvidia-modeset off
 
 const PRIME_DISCRETE_PATH: &str = "/etc/prime-discrete";
 
-#[derive(Debug, err_derive::Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum GraphicsDeviceError {
-    #[error(display = "failed to execute {} command: {}", cmd, why)]
+    #[error("failed to execute {} command: {}", cmd, why)]
     Command { cmd: &'static str, why: io::Error },
-    #[error(display = "{} in use by {}", func, driver)]
+    #[error("{} in use by {}", func, driver)]
     DeviceInUse { func: String, driver: String },
-    #[error(display = "failed to probe driver features: {}", _0)]
+    #[error("failed to probe driver features: {}", _0)]
     Json(io::Error),
-    #[error(display = "failed to open system76-power modprobe file: {}", _0)]
+    #[error("failed to open system76-power modprobe file: {}", _0)]
     ModprobeFileOpen(io::Error),
-    #[error(display = "failed to write to system76-power modprobe file: {}", _0)]
+    #[error("failed to write to system76-power modprobe file: {}", _0)]
     ModprobeFileWrite(io::Error),
-    #[error(display = "failed to fetch list of active kernel modules: {}", _0)]
+    #[error("failed to fetch list of active kernel modules: {}", _0)]
     ModulesFetch(io::Error),
-    #[error(display = "does not have switchable graphics")]
+    #[error("does not have switchable graphics")]
     NotSwitchable,
-    #[error(display = "PCI driver error on {}: {}", device, why)]
+    #[error("PCI driver error on {}: {}", device, why)]
     PciDriver { device: String, why: io::Error },
-    #[error(display = "failed to get PRIME value: {}", _0)]
+    #[error("failed to get PRIME value: {}", _0)]
     PrimeModeRead(io::Error),
-    #[error(display = "failed to set PRIME value: {}", _0)]
+    #[error("failed to set PRIME value: {}", _0)]
     PrimeModeWrite(io::Error),
-    #[error(display = "failed to remove PCI device {}: {}", device, why)]
+    #[error("failed to remove PCI device {}: {}", device, why)]
     Remove { device: String, why: io::Error },
-    #[error(display = "failed to rescan PCI bus: {}", _0)]
+    #[error("failed to rescan PCI bus: {}", _0)]
     Rescan(io::Error),
-    #[error(display = "failed to read sysfs info: {}", _0)]
+    #[error("failed to read sysfs info: {}", _0)]
     SysFs(io::Error),
-    #[error(display = "failed to unbind {} on PCI driver {}: {}", func, driver, why)]
+    #[error("failed to unbind {} on PCI driver {}: {}", func, driver, why)]
     Unbind { func: String, driver: String, why: io::Error },
-    #[error(display = "update-initramfs failed with {} status", _0)]
+    #[error("update-initramfs failed with {} status", _0)]
     UpdateInitramfs(ExitStatus),
     #[error(display = "update-initramfs didn't found tools and failed with {} status", _0)]
     UpdateInitramfsNoTools(ExitStatus),
@@ -100,7 +104,7 @@ impl GraphicsDevice {
                 match func.driver() {
                     Ok(driver) => {
                         log::info!("{}: Unbinding {}", driver.id(), func.id());
-                        driver.unbind(&func).map_err(|why| GraphicsDeviceError::Unbind {
+                        driver.unbind(func).map_err(|why| GraphicsDeviceError::Unbind {
                             driver: driver.id().to_owned(),
                             func: func.id().to_owned(),
                             why,
@@ -216,19 +220,19 @@ impl Graphics {
                 match dev.vendor()? {
                     0x1002 => {
                         log::info!("{}: AMD graphics", dev.id());
-                        amd.push(GraphicsDevice::new(dev.id().to_owned(), functions(&dev)));
+                        amd.push(GraphicsDevice::new(dev.id().to_owned(), functions(dev)));
                     }
                     0x10DE => {
                         log::info!("{}: NVIDIA graphics", dev.id());
-                        nvidia.push(GraphicsDevice::new(dev.id().to_owned(), functions(&dev)));
+                        nvidia.push(GraphicsDevice::new(dev.id().to_owned(), functions(dev)));
                     }
                     0x8086 => {
                         log::info!("{}: Intel graphics", dev.id());
-                        intel.push(GraphicsDevice::new(dev.id().to_owned(), functions(&dev)));
+                        intel.push(GraphicsDevice::new(dev.id().to_owned(), functions(dev)));
                     }
                     vendor => {
                         log::info!("{}: Other({:X}) graphics", dev.id(), vendor);
-                        other.push(GraphicsDevice::new(dev.id().to_owned(), functions(&dev)));
+                        other.push(GraphicsDevice::new(dev.id().to_owned(), functions(dev)));
                     }
                 }
             }
@@ -260,7 +264,7 @@ impl Graphics {
         let device = format!("/sys/bus/pci/devices/{}/device", self.nvidia[0].id);
         let id = fs::read_to_string(device).map_err(GraphicsDeviceError::SysFs)?;
         let id = id.trim_start_matches("0x").trim();
-        u32::from_str_radix(&id, 16).map_err(|e| {
+        u32::from_str_radix(id, 16).map_err(|e| {
             GraphicsDeviceError::SysFs(io::Error::new(io::ErrorKind::InvalidData, e.to_string()))
         })
     }
@@ -279,7 +283,7 @@ impl Graphics {
         // There may be multiple entries that share the same device ID.
         for dev in gpus.chips {
             let did = dev.devid.trim_start_matches("0x").trim();
-            let did = u32::from_str_radix(&did, 16).unwrap_or_default();
+            let did = u32::from_str_radix(did, 16).unwrap_or_default();
             if did == id {
                 return Ok(dev);
             }
