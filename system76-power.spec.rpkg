@@ -68,10 +68,10 @@ install -Dpm 0644 "completion/completion.sh" "%{buildroot}%{_datadir}/bash-compl
 %files
 %{_bindir}/%{name}
 %{_sysconfdir}/dbus-1/system.d/%{name}.conf
+%{_sysconfdir}/dbus-1/interfaces/com.system76.PowerDaemon.xml
 %{_datadir}/bash-completion/completions/%{name}
 %{_unitdir}/%{name}.service
 %{_datadir}/polkit-1/actions/com.system76.powerdaemon.policy
-
 # These files are owned by the package and are removed on uninstallation,
 # but they are not installed.
 %ghost %{_sysconfdir}/modprobe.d/%{name}.conf
