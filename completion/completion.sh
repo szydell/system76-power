@@ -4,6 +4,7 @@
 # -----
 #
 # Changelog:
+# 2022.01.28 - change-tresholds
 # 2020.06.30 - rename intel to integrated mode
 # 2019.01.14 - add hybrid mode
 # 2018.10.30 - initial version <github.com/szydell/system76-power>
@@ -17,7 +18,7 @@ _system76-power ()
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
     # 1st level options
-    opts="charge-threshold daemon graphics help profile --version --help"
+    opts="charge-thresholds daemon graphics help profile --version --help"
 
     # 2nd/3rd level options
     case "${prev}" in
