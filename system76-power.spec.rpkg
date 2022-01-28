@@ -51,6 +51,8 @@ sed -i Makefile \
 %make_install
 # install -Dpm 0644 "debian/%{name}.service" "%{buildroot}%{_unitdir}/%{name}.service"
 install -Dpm 0644 "completion/completion.sh" "%{buildroot}%{_datadir}/bash-completion/completions/%{name}"
+# do not remove. https://pagure.io/system76/system76-power/issue/2
+install -D -m 0644 "debian/%{name}-wake.service" "%{buildroot}/%{_unitdir}/%{name}-wake.service"
 
 # do after installation
 %post
@@ -69,6 +71,9 @@ install -Dpm 0644 "completion/completion.sh" "%{buildroot}%{_datadir}/bash-compl
 %{_bindir}/%{name}
 %{_sysconfdir}/dbus-1/system.d/%{name}.conf
 %{_sysconfdir}/dbus-1/interfaces/com.system76.PowerDaemon.xml
+# do not remove. https://pagure.io/system76/system76-power/issue/2
+%{_sysconfdir}/systemd/system/%{name}-wake.service
+#
 %{_datadir}/bash-completion/completions/%{name}
 %{_unitdir}/%{name}.service
 %{_datadir}/polkit-1/actions/com.system76.powerdaemon.policy
