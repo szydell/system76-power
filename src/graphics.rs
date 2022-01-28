@@ -92,8 +92,6 @@ pub enum GraphicsDeviceError {
     Unbind { func: String, driver: String, why: io::Error },
     #[error("update-initramfs failed with {} status", _0)]
     UpdateInitramfs(ExitStatus),
-    #[error(display = "update-initramfs didn't found tools and failed with {} status", _0)]
-    UpdateInitramfsNoTools(ExitStatus),
 }
 
 pub struct GraphicsDevice {
@@ -458,34 +456,14 @@ impl Graphics {
         }
 
         log::info!("Updating initramfs");
-        
+        const UPDATE_INITRAMFS_CMD: &str = "dracut";
+        let status = process::Command::new(UPDATE_INITRAMFS_CMD)
+            .arg("-u")
+            .status()
+            .map_err(|why| GraphicsDeviceError::Command { cmd: UPDATE_INITRAMFS_CMD, why })?;
 
-        const COMMAND_CMD: &str = "command";
-        const UPDATE_DRACUT_CMD: &str = "dracut";
-        const UPDATE_INITRAMFS_CMD: &str = "update-initramfs";
-
-        if process::Command::new(COMMAND_CMD).arg("-v").arg(UPDATE_DRACUT_CMD).stdout(process::Stdio::null()).status().map_err(|why| GraphicsDeviceError::Command { cmd: UPDATE_DRACUT_CMD, why })?.success() {
-
-            let status = process::Command::new(UPDATE_DRACUT_CMD)
-                .arg("--force")
-                .status()
-                .map_err(|why| GraphicsDeviceError::Command { cmd: UPDATE_DRACUT_CMD, why })?;
-            if ! status.success() {
-                return Err(GraphicsDeviceError::UpdateInitramfs(status));
-            }
-
-            
-        } else {
-
-            let status = process::Command::new(UPDATE_INITRAMFS_CMD)
-                .arg("-u")
-                .status()
-                .map_err(|why| GraphicsDeviceError::Command { cmd: UPDATE_INITRAMFS_CMD, why })?;
-        
-            if ! status.success() {
-                return Err(GraphicsDeviceError::UpdateInitramfs(status));
-            }
-
+        if !status.success() {
+            return Err(GraphicsDeviceError::UpdateInitramfs(status));
         }
 
         Ok(())
