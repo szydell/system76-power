@@ -90,8 +90,8 @@ pub enum GraphicsDeviceError {
     SysFs(io::Error),
     #[error("failed to unbind {} on PCI driver {}: {}", func, driver, why)]
     Unbind { func: String, driver: String, why: io::Error },
-    #[error("update-initramfs failed with {} status", _0)]
-    UpdateInitramfs(ExitStatus),
+    #[error("update-dracut failed with {} status", _0)]
+    UpdateDracut(ExitStatus),
 }
 
 pub struct GraphicsDevice {
@@ -455,15 +455,15 @@ impl Graphics {
             );
         }
 
-        log::info!("Updating initramfs");
-        const UPDATE_INITRAMFS_CMD: &str = "dracut";
-        let status = process::Command::new(UPDATE_INITRAMFS_CMD)
-            .arg("-u")
+        log::info!("Updating dracut");
+        const UPDATE_DRACUT_CMD: &str = "dracut";
+        let status = process::Command::new(UPDATE_DRACUT_CMD)
+            .arg("--force")
             .status()
-            .map_err(|why| GraphicsDeviceError::Command { cmd: UPDATE_INITRAMFS_CMD, why })?;
+            .map_err(|why| GraphicsDeviceError::Command { cmd: UPDATE_DRACUT_CMD, why })?;
 
         if !status.success() {
-            return Err(GraphicsDeviceError::UpdateInitramfs(status));
+            return Err(GraphicsDeviceError::UpdateDracut(status));
         }
 
         Ok(())
