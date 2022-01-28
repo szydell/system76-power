@@ -72,7 +72,7 @@ install -D -m 0644 "debian/%{name}-wake.service" "%{buildroot}/%{_unitdir}/%{nam
 %{_sysconfdir}/dbus-1/system.d/%{name}.conf
 %{_sysconfdir}/dbus-1/interfaces/com.system76.PowerDaemon.xml
 # do not remove. https://pagure.io/system76/system76-power/issue/2
-%{_sysconfdir}/systemd/system/%{name}-wake.service
+%{_unitdir}/%{name}-wake.service
 #
 %{_datadir}/bash-completion/completions/%{name}
 %{_unitdir}/%{name}.service
