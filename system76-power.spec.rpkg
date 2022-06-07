@@ -20,11 +20,19 @@ Source:     {{{ git_dir_pack }}}
 BuildRequires: cargo
 BuildRequires: systemd-rpm-macros
 BuildRequires: dbus-devel
+%if 0%{?fedora} < 37
 BuildRequires: libusb-devel
+%else
+BuildRequires: libusb-compat-0.1-devel
+%endif
 #Packages required to work
 Requires: dbus-common
 Requires: libusb
-
+%if 0%{?fedora} < 37
+Requires: libusb
+%else
+Requires: libusb-compat-0.1 
+%endif
 
 # More detailed description of the package
 %description
