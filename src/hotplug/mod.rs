@@ -2,28 +2,14 @@
 //
 // SPDX-License-Identifier: GPL-3.0-only
 
-use crate::sideband::{Sideband, SidebandError, PCR_BASE_ADDRESS};
+pub mod mux;
+pub mod sideband;
+
+use sideband::{Sideband, SidebandError, PCR_BASE_ADDRESS};
 use std::{
     fs,
     io::{self, Read, Seek},
 };
-
-pub const REQUIRES_NVIDIA: &[&str] = &[
-    "addw1",
-    "addw2",
-    "gaze14",
-    "gaze15",
-    "gaze16-3050",
-    "gaze16-3060",
-    "gaze16-3060-b",
-    "kudu6",
-    "oryp4",
-    "oryp4-b",
-    "oryp5",
-    "oryp6",
-    "oryp7",
-    "oryp8",
-];
 
 #[derive(Debug, thiserror::Error)]
 pub enum HotPlugDetectError {
@@ -39,6 +25,10 @@ pub enum HotPlugDetectError {
     SubsystemDevice { model: &'static str, why: io::Error },
     #[error("failed to open /dev/mem: {}", _0)]
     DevMemAccess(io::Error),
+}
+
+impl From<SidebandError> for HotPlugDetectError {
+    fn from(err: SidebandError) -> Self { HotPlugDetectError::Sideband(err) }
 }
 
 pub trait Detect {
@@ -116,15 +106,14 @@ pub struct HotPlugDetect {
 }
 
 impl HotPlugDetect {
-    pub unsafe fn new(nvidia_device: Option<String>) -> Result<HotPlugDetect, HotPlugDetectError> {
+    pub unsafe fn new(nvidia_device: Option<String>) -> Result<Self, HotPlugDetectError> {
         let model = fs::read_to_string("/sys/class/dmi/id/product_version")
             .map_err(HotPlugDetectError::ProductVersion)?;
 
         match model.trim() {
             "addw1" | "addw2" => Ok(Self {
                 integrated: Integrated::Intel(Intel {
-                    sideband: Sideband::new(PCR_BASE_ADDRESS)
-                        .map_err(HotPlugDetectError::Sideband)?,
+                    sideband: Sideband::new(PCR_BASE_ADDRESS)?,
                     port:     0x6A,
                     pins:     [
                         0x28, // USB-C on rear
@@ -146,8 +135,7 @@ impl HotPlugDetect {
                     // NVIDIA GTX 1660 Ti
                     "0x8550" | "0x8551" => Ok(Self {
                         integrated: Integrated::Intel(Intel {
-                            sideband: Sideband::new(PCR_BASE_ADDRESS)
-                                .map_err(HotPlugDetectError::Sideband)?,
+                            sideband: Sideband::new(PCR_BASE_ADDRESS)?,
                             port:     0x6A,
                             pins:     [
                                 0x2a, // HDMI
@@ -160,8 +148,7 @@ impl HotPlugDetect {
                     // NVIDIA GTX 1650
                     "0x8560" | "0x8561" => Ok(Self {
                         integrated: Integrated::Intel(Intel {
-                            sideband: Sideband::new(PCR_BASE_ADDRESS)
-                                .map_err(HotPlugDetectError::Sideband)?,
+                            sideband: Sideband::new(PCR_BASE_ADDRESS)?,
                             port:     0x6A,
                             pins:     [
                                 0x00, // HDMI (0x2a) is connected to Intel graphics
@@ -184,8 +171,7 @@ impl HotPlugDetect {
                     // NVIDIA GTX 1660 Ti
                     "0x2191" => Ok(Self {
                         integrated: Integrated::Intel(Intel {
-                            sideband: Sideband::new(PCR_BASE_ADDRESS)
-                                .map_err(HotPlugDetectError::Sideband)?,
+                            sideband: Sideband::new(PCR_BASE_ADDRESS)?,
                             port:     0x6A,
                             pins:     [
                                 0x2a, // HDMI
@@ -198,8 +184,7 @@ impl HotPlugDetect {
                     // NVIDIA GTX 1650, 1650 Ti
                     "0x1f99" | "0x1f95" => Ok(Self {
                         integrated: Integrated::Intel(Intel {
-                            sideband: Sideband::new(PCR_BASE_ADDRESS)
-                                .map_err(HotPlugDetectError::Sideband)?,
+                            sideband: Sideband::new(PCR_BASE_ADDRESS)?,
                             port:     0x6A,
                             pins:     [
                                 0x00, // HDMI (0x2a) is connected to Intel graphics
@@ -217,8 +202,7 @@ impl HotPlugDetect {
             }
             "gaze16-3050" => Ok(Self {
                 integrated: Integrated::Intel(Intel {
-                    sideband: Sideband::new(PCR_BASE_ADDRESS)
-                        .map_err(HotPlugDetectError::Sideband)?,
+                    sideband: Sideband::new(PCR_BASE_ADDRESS)?,
                     port:     0x6A,
                     pins:     [
                         0x00, // HDMI (0x52) is connected to Intel graphics
@@ -230,12 +214,23 @@ impl HotPlugDetect {
             }),
             "gaze16-3060" | "gaze16-3060-b" => Ok(Self {
                 integrated: Integrated::Intel(Intel {
-                    sideband: Sideband::new(PCR_BASE_ADDRESS)
-                        .map_err(HotPlugDetectError::Sideband)?,
+                    sideband: Sideband::new(PCR_BASE_ADDRESS)?,
                     port:     0x69,
                     pins:     [
                         0x02, // Mini DisplayPort
                         0x04, // USB-C
+                        0x00, // Not Connected
+                        0x00, // Not Connected
+                    ],
+                }),
+            }),
+            "gaze17-3060-b" => Ok(Self {
+                integrated: Integrated::Intel(Intel {
+                    sideband: Sideband::new(PCR_BASE_ADDRESS)?,
+                    port:     0x6E,
+                    pins:     [
+                        0x72, // Mini DisplayPort
+                        0x78, // HDMI
                         0x00, // Not Connected
                         0x00, // Not Connected
                     ],
@@ -252,8 +247,7 @@ impl HotPlugDetect {
 
             "oryp4" | "oryp4-b" | "oryp5" => Ok(Self {
                 integrated: Integrated::Intel(Intel {
-                    sideband: Sideband::new(PCR_BASE_ADDRESS)
-                        .map_err(HotPlugDetectError::Sideband)?,
+                    sideband: Sideband::new(PCR_BASE_ADDRESS)?,
                     port:     0x6A,
                     pins:     [
                         0x28, // USB-C
@@ -265,8 +259,7 @@ impl HotPlugDetect {
             }),
             "oryp6" | "oryp7" => Ok(Self {
                 integrated: Integrated::Intel(Intel {
-                    sideband: Sideband::new(PCR_BASE_ADDRESS)
-                        .map_err(HotPlugDetectError::Sideband)?,
+                    sideband: Sideband::new(PCR_BASE_ADDRESS)?,
                     port:     0x6A,
                     pins:     [
                         0x2a, // HDMI
@@ -278,13 +271,24 @@ impl HotPlugDetect {
             }),
             "oryp8" => Ok(Self {
                 integrated: Integrated::Intel(Intel {
-                    sideband: Sideband::new(PCR_BASE_ADDRESS)
-                        .map_err(HotPlugDetectError::Sideband)?,
+                    sideband: Sideband::new(PCR_BASE_ADDRESS)?,
                     port:     0x69,
                     pins:     [
                         0x02, // Mini DisplayPort
                         0x04, // HDMI
                         0x06, // USB-C
+                        0x00, // Not Connected
+                    ],
+                }),
+            }),
+            "oryp9" => Ok(Self {
+                integrated: Integrated::Intel(Intel {
+                    sideband: Sideband::new(PCR_BASE_ADDRESS)?,
+                    port:     0x6E,
+                    pins:     [
+                        0x72, // Mini DisplayPort
+                        0x78, // HDMI
+                        0x7C, // USB-C
                         0x00, // Not Connected
                     ],
                 }),
