@@ -57,10 +57,10 @@ sed -i Makefile \
 # the installable rpm package.
 %install
 %make_install
-# install -Dpm 0644 "debian/%{name}.service" "%{buildroot}%{_unitdir}/%{name}.service"
 install -Dpm 0644 "completion/completion.sh" "%{buildroot}%{_datadir}/bash-completion/completions/%{name}"
 # do not remove. https://pagure.io/system76/system76-power/issue/2
 install -D -m 0644 "debian/%{name}-wake.service" "%{buildroot}/%{_unitdir}/%{name}-wake.service"
+install -D -m 0644 "data/com.system76.PowerDaemon.service" "%{buildroot}/%{_unitdir}/com.system76.PowerDaemon.service"
 
 # do after installation
 %post
@@ -77,14 +77,17 @@ install -D -m 0644 "debian/%{name}-wake.service" "%{buildroot}/%{_unitdir}/%{nam
 # Those files will be in the rpm
 %files
 %{_bindir}/%{name}
-%{_sysconfdir}/dbus-1/system.d/%{name}.conf
-%{_sysconfdir}/dbus-1/interfaces/com.system76.PowerDaemon.xml
 # do not remove. https://pagure.io/system76/system76-power/issue/2
 %{_unitdir}/%{name}-wake.service
 #
 %{_datadir}/bash-completion/completions/%{name}
-%{_unitdir}/%{name}.service
-%{_datadir}/polkit-1/actions/com.system76.powerdaemon.policy
+%{_unitdir}/com.system76.PowerDaemon.service
+%{_datadir}/dbus-1/interfaces/com.system76.PowerDaemon.xml
+%{_datadir}/dbus-1/system.d/com.system76.PowerDaemon.conf
+%{_datadir}/polkit-1/actions/com.system76.PowerDaemon.policy
+
+
+
 # These files are owned by the package and are removed on uninstallation,
 # but they are not installed.
 %ghost %{_sysconfdir}/modprobe.d/%{name}.conf
