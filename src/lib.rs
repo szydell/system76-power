@@ -6,6 +6,7 @@
 #![allow(clippy::missing_safety_doc)]
 
 pub mod acpi_platform;
+pub mod args;
 pub mod charge_thresholds;
 pub mod client;
 pub mod cpufreq;
@@ -20,11 +21,9 @@ pub mod kernel_parameters;
 pub mod logging;
 pub mod modprobe;
 pub mod module;
-pub mod mux;
 pub mod pci;
 pub mod polkit;
 pub mod radeon;
-pub mod sideband;
 pub mod snd;
 pub mod util;
 pub mod wifi;

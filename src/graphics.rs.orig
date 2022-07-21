@@ -124,10 +124,15 @@ pub enum GraphicsDeviceError {
     SysFs(io::Error),
     #[error("failed to unbind {} on PCI driver {}: {}", func, driver, why)]
     Unbind { func: String, driver: String, why: io::Error },
+<<<<<<< HEAD
     #[error("update-dracut failed with {} status", _0)]
     UpdateDracut(ExitStatus),
+=======
+    #[error("update-initramfs failed with {} status", _0)]
+    UpdateInitramfs(ExitStatus),
     #[error("failed to access Xserver config: {}", _0)]
     XserverConf(io::Error),
+>>>>>>> 464b4c9c50f5f18da2883b02f5e6c0114ea12477
 }
 
 pub struct GraphicsDevice {
