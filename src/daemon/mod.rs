@@ -246,6 +246,7 @@ pub async fn daemon() -> Result<(), String> {
     if let Err(why) = daemon.balanced() {
         log::warn!("Failed to set initial profile: {}", why);
     }
+
     daemon.initial_set = true;
 
     log::info!("Registering dbus name {}", DBUS_NAME);
