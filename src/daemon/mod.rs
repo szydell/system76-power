@@ -38,7 +38,9 @@ use crate::{
     hid_backlight,
     hotplug::{mux, Detect, HotPlugDetect},
     kernel_parameters::{KernelParameter, NmiWatchdog},
-    polkit, Power, DBUS_IFACE, DBUS_NAME, DBUS_PATH,
+    polkit,
+    runtime_pm::runtime_pm_quirks,
+    Power, DBUS_IFACE, DBUS_NAME, DBUS_PATH,
 };
 
 mod profiles;
@@ -239,6 +241,13 @@ pub async fn daemon() -> Result<(), String> {
         Ok(()) => (),
         Err(err) => {
             log::warn!("Failed to set automatic graphics power: {}", err);
+        }
+    }
+
+    match runtime_pm_quirks() {
+        Ok(()) => (),
+        Err(err) => {
+            log::warn!("Failed to set runtime power management quirks: {}", err);
         }
     }
 

@@ -14,7 +14,10 @@ Repo is available here: https://copr.fedorainfracloud.org/coprs/szydell/system76
 
 **system76-power** is a utility for managing graphics and power profiles.
 
-## Graphics Modes
+## Switchable Graphics
+
+Switchable graphics is a feature for laptops and all-in-one PCs. It is not
+supported on desktops.
 
 A reboot is **required** for changes to take effect after switching modes.
 
