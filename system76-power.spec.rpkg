@@ -64,15 +64,15 @@ install -D -m 0644 "data/com.system76.PowerDaemon.service" "%{buildroot}/%{_unit
 
 # do after installation
 %post
-%systemd_post %{name}.service
+%systemd_post com.system76.PowerDaemon.service
 
 # do before uninstallation
 %preun
-%systemd_preun %{name}.service
+%systemd_preun com.system76.PowerDaemon.service
 
 # do after unistallation
 %postun
-%systemd_postun_with_restart %{name}.service
+%systemd_postun_with_restart com.system76.PowerDaemon.service
 
 # Those files will be in the rpm
 %files
