@@ -2,8 +2,8 @@
 # vim: syntax=spec
 
 Name:       system76-power
-Version:    1.1.25
-Release:    9
+Version:    1.1.26
+Release:    1
 Summary:    system76-power
 License:    GPLv3
 URL:        https://github.com/pop-os/system76-power
