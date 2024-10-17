@@ -29,7 +29,7 @@ use crate::{
     hid_backlight,
     hotplug::{mux, Detect, HotPlugDetect},
     kernel_parameters::{KernelParameter, NmiWatchdog},
-    runtime_pm::runtime_pm_quirks,
+    runtime_pm::{runtime_pm_quirks, thunderbolt_hotplug_wakeup},
     DBUS_NAME, DBUS_PATH,
 };
 
@@ -480,7 +480,7 @@ impl UPowerPowerProfiles {
     async fn actions(&self) -> Vec<String> { vec![] }
 
     #[dbus_interface(property)]
-    async fn version(&self) -> &str { "system76-power 1.2.0" }
+    async fn version(&self) -> &str { "system76-power 1.2.1" }
 }
 
 pub struct NetHadessPowerProfiles(UPowerPowerProfiles);
@@ -539,7 +539,9 @@ pub async fn daemon() -> anyhow::Result<()> {
         }
     }
 
-    match runtime_pm_quirks() {
+    let vendor = fs::read_to_string("/sys/class/dmi/id/sys_vendor")?;
+    let model = fs::read_to_string("/sys/class/dmi/id/product_version")?;
+    match runtime_pm_quirks(&model, &vendor) {
         Ok(()) => (),
         Err(err) => {
             log::warn!("Failed to set runtime power management quirks: {}", err);
@@ -616,6 +618,15 @@ pub async fn daemon() -> anyhow::Result<()> {
             sleep(Duration::from_millis(1000)).await;
 
             fan_daemon.step();
+
+            // HACK: As of Linux 6.9.3, TBT5 controller must be active for HPD
+            // to work on USB-C ports.
+            match thunderbolt_hotplug_wakeup(&vendor, &model) {
+                Ok(()) => (),
+                Err(err) => {
+                    log::warn!("Failed to wakeup thunderbolt on hotplug: {}", err);
+                }
+            }
 
             let hpd = hpd();
             for i in 0..hpd.len() {
