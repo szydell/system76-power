@@ -2,7 +2,7 @@
 # vim: syntax=spec
 
 Name:       system76-power
-Version:    1.2.4
+Version:    1.2.5
 Release:    1
 Summary:    system76-power
 License:    GPLv3
