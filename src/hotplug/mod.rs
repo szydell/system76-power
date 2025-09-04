@@ -154,6 +154,18 @@ impl HotPlugDetect {
                     ],
                 }),
             }),
+            "addw5" => Ok(Self {
+                integrated: Integrated::Intel(Intel {
+                    sideband: Sideband::new(0x9F_F000_0000)?,
+                    port:     0x6A,
+                    pins:     [
+                        0x88,   // HDMI
+                        NO_PIN, // USB-C
+                        NO_PIN, // USB-C
+                        NO_PIN, // Not connected
+                    ],
+                }),
+            }),
             "bonw15" | "bonw15-b" => Ok(Self {
                 integrated: Integrated::Intel(Intel {
                     sideband: Sideband::new(0xE000_0000)?,
@@ -288,6 +300,16 @@ impl HotPlugDetect {
                         0x78,   // HDMI
                         NO_PIN, // Not Connected
                         NO_PIN, // Not Connected
+                    ],
+                }),
+            }),
+            "gaze20" => Ok(Self {
+                integrated: Integrated::Intel(Intel {
+                    sideband: Sideband::new(PCR_BASE_ADDRESS)?,
+                    port:     0x6E,
+                    pins:     [
+                        0x7C, // HDMI
+                        NO_PIN, NO_PIN, NO_PIN,
                     ],
                 }),
             }),
