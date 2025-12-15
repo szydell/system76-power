@@ -98,7 +98,6 @@ const EXTERNAL_DISPLAY_REQUIRES_NVIDIA: &[&str] = &[
 const SYSTEMCTL_CMD: &str = "systemctl";
 const UPDATE_DRACUT_CMD: &str = "dracut";
 
-
 #[derive(Debug, thiserror::Error)]
 pub enum GraphicsDeviceError {
     #[error("failed to execute {} command: {}", cmd, why)]
@@ -610,7 +609,7 @@ impl Graphics {
         }
 
         log::info!("Updating dracut");
-        
+
         let status = process::Command::new(UPDATE_DRACUT_CMD)
             .arg("--force")
             .status()
