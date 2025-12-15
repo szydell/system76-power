@@ -96,7 +96,6 @@ const EXTERNAL_DISPLAY_REQUIRES_NVIDIA: &[&str] = &[
 ];
 
 const SYSTEMCTL_CMD: &str = "systemctl";
-const UPDATE_DRACUT_CMD: &str = "dracut";
 
 #[derive(Debug, thiserror::Error)]
 pub enum GraphicsDeviceError {
@@ -128,8 +127,8 @@ pub enum GraphicsDeviceError {
     SysFs(io::Error),
     #[error("failed to unbind {} on PCI driver {}: {}", func, driver, why)]
     Unbind { func: String, driver: String, why: io::Error },
-    #[error("update-dracut failed with {} status", _0)]
-    UpdateDracut(ExitStatus),
+    #[error("update-initramfs failed with {} status", _0)]
+    UpdateInitramfs(ExitStatus),
     #[error("failed to access Xserver config: {}", _0)]
     XserverConf(io::Error),
 }
@@ -608,15 +607,16 @@ impl Graphics {
             );
         }
 
-        log::info!("Updating dracut");
+        let (cmd, arg) = update_initramfs_cmd();
+        log::info!("Updating initramfs with: {} {}", cmd, arg);
 
-        let status = process::Command::new(UPDATE_DRACUT_CMD)
-            .arg("--force")
+        let status = process::Command::new(cmd)
+            .arg(arg)
             .status()
-            .map_err(|why| GraphicsDeviceError::Command { cmd: UPDATE_DRACUT_CMD, why })?;
+            .map_err(|why| GraphicsDeviceError::Command { cmd, why })?;
 
         if !status.success() {
-            return Err(GraphicsDeviceError::UpdateDracut(status));
+            return Err(GraphicsDeviceError::UpdateInitramfs(status));
         }
 
         Ok(())
