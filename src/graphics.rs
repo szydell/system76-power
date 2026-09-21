@@ -68,6 +68,7 @@ const EXTERNAL_DISPLAY_REQUIRES_NVIDIA: &[&str] = &[
     "addw3",
     "addw4",
     "addw5",
+    "addp6",
     "bonw15",
     "bonw15-b",
     "bonw16",
@@ -91,6 +92,7 @@ const EXTERNAL_DISPLAY_REQUIRES_NVIDIA: &[&str] = &[
     "oryp11",
     "oryp12",
     "oryp13",
+    "oryp14",
     "serw13",
     "serw14",
 ];
@@ -368,11 +370,20 @@ impl Graphics {
             .map_err(|e| {
                 GraphicsDeviceError::Json(io::Error::new(io::ErrorKind::InvalidData, e.to_string()))
             })?
-            .filter_map(Result::ok)
-            .map(|f| f.path())
-            .filter(|f| f.to_str().unwrap_or_default().contains("nvidia-driver-"))
-            .map(|f| f.join("supported-gpus.json"))
-            .filter(|f| f.exists())
+            .filter_map(|result| {
+                let f = result.ok()?.path();
+                let package_name = f.to_str().unwrap_or_default();
+                if package_name.contains("nvidia-kernel-common")
+                    || package_name.contains("nvidia-driver-")
+                {
+                    let path = f.join("supported-gpus.json");
+                    if path.exists() {
+                        return Some(path);
+                    }
+                }
+
+                None
+            })
             .collect();
 
         // There should be only 1 driver version installed.
@@ -634,7 +645,12 @@ impl Graphics {
             log::info!("Enabling graphics power");
             self.bus.rescan().map_err(GraphicsDeviceError::Rescan)?;
 
-            sysfs_power_control(self.nvidia[0].id.clone(), self.get_vendor()?);
+            let bv = fs::read_to_string("/sys/class/dmi/id/bios_vendor")
+                .map_err(GraphicsDeviceError::SysFs)?;
+
+            if bv.trim() == "coreboot" {
+                sysfs_power_control(self.nvidia[0].id.clone(), self.get_vendor()?);
+            }
         } else {
             log::info!("Disabling graphics power");
 
@@ -695,8 +711,9 @@ fn get_xorg_conf_path() -> &'static str {
 // system in an invalid state that will eventually lock up. So defer setting power management
 // using a thread.
 //
-// Ref: pop-os/nvidia-graphics-drivers@f9815ed603bd
-// Ref: system76/firmware-open#160
+// Drop after firmware with DGPU_PWRGD fix is released.
+//
+// Ref: system76/coreboot#274
 fn sysfs_power_control(pciid: String, mode: GraphicsMode) {
     std::thread::spawn(move || {
         std::thread::sleep(std::time::Duration::from_millis(5000));
